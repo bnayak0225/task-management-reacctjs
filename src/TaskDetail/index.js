@@ -15,6 +15,7 @@ import CustomDropDown from "../Component/dropDown";
 import CreateTask from "../Create";
 import {useParams} from "react-router-dom";
 import CardTask from "../Component/cardTask";
+import fetchApi from "../services/fetchApi";
 
 const TaskDetail = ({mode, id}) => {
     const params = useParams()
@@ -24,7 +25,7 @@ const TaskDetail = ({mode, id}) => {
     let header = {
         jira: [
             {title: "Summary", key: (key)=>key.fields.summary, xs: 12},
-            {title: "Description", key: (key)=>key.fields.description.content[0].content[0].text, xs: 12},
+            {title: "Description", key: (key)=>key.fields.description?.content[0]?.content[0]?.text, xs: 12},
             {title: "Status",
                 key: (key)=> {
                     return [
@@ -89,24 +90,15 @@ const TaskDetail = ({mode, id}) => {
 
 
     useEffect(()=> {
-        if(mode==="jira" && params.id){
-            fetch(`http://127.0.0.1:5000/api/get_jira_ticket?id=${params.id}`).then((res)=>res.json()).then((res)=>{
-                setDetail(res.data)
-            })
-
-        }
-        else if(mode==="asana" && params.id){
-            fetch(`http://127.0.0.1:5000/api/get_asana_task?gid=${params.id}`).then((res)=>res.json()).then((res)=>{
-                setDetail(res.data)
-            })
-
-        }
-        else if(mode==="cubyts" && params.id){
-            fetch(`http://127.0.0.1:5000/api/get_cubyts_task?id=${params.id}`).then((res)=>res.json()).then((res)=>{
-                setDetail(res.data)
-            })
-
-        }
+        fetchApi({
+            url: `http://127.0.0.1:5000/api/task/${mode}?id=${params.id}`,
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            },
+        }).then((res)=>{
+            setDetail(res.data)
+        })
     }, [params])
 
     return (

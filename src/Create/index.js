@@ -1,6 +1,7 @@
 import {Box, Button, FormLabel, Grid, OutlinedInput, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import fetchApi from "../services/fetchApi";
 
 const CreateTask = ({mode}) => {
     const navigate = useNavigate()
@@ -63,45 +64,18 @@ const CreateTask = ({mode}) => {
 
     }, [])
     const createTask = () => {
-        if(mode==="jira"){
-            fetch("http://127.0.0.1:5000/api/create_jira_ticket", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(inputObject)
-            }).then((res)=>res.json()).then((res)=>{
-                console.log("created");
-                navigate(`/jira/${res.data.id}`)
-            })
+        fetchApi({
+            url: `http://127.0.0.1:5000/api/create-task/${mode}`,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: inputObject
+        }).then((res)=>{
+            console.log("created");
+            navigate(`/${mode}/${res.data.id}`)
+        })
 
-        }
-        else if(mode==="asana"){
-            fetch("http://127.0.0.1:5000/api/create_asana_tasks", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(inputObject)
-            }).then((res)=>res.json()).then((res)=>{
-                console.log("created");
-                navigate(`/asana/${res.data.gid}`)
-            })
-
-        }
-        else if(mode==="cubyts"){
-            fetch("http://127.0.0.1:5000/api/create_cubyts_task", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(inputObject)
-            }).then((res)=>res.json()).then((res)=>{
-                console.log("created");
-                navigate(`/cubyts/${res.id}`)
-            })
-
-        }
     }
     return (
         <Box sx={{

@@ -15,6 +15,7 @@ import CustomDropDown from "../Component/dropDown";
 import CreateTask from "../Create";
 import CardTask from "../Component/cardTask";
 import {useNavigate} from "react-router-dom";
+import fetchApi from "../services/fetchApi";
 
 const TaskList = ({mode}) => {
     const navigate = useNavigate()
@@ -93,60 +94,37 @@ const TaskList = ({mode}) => {
 
     const updateStatus = (status, id) => {
         let newList = [...list]
+        let reqBody = {
+            status: status,
+            id: id
+        }
         if(mode==="jira") {
             let index = list.findIndex(a => a.id === id)
             newList[index].fields.status.id = status
-            setList(newList)
-            let reqBody = {
-                statusId: status,
-                taskId: id
-            }
-            fetch(`http://127.0.0.1:5000/api/update_jira_ticket`, {
-                method: "PUT", body: JSON.stringify(reqBody),
-                headers: {
-                    "Content-Type": "application/json"
-                },
-            }).then((res)=>res.json()).then((res)=>{
-                console.log("changed")
-            })
         }
         else if(mode==="asana") {
             let index = list.findIndex(a => a.gid === id)
             newList[index].completed = status
-            setList(newList)
-            let reqBody = {
-                status: status,
-                gid: id
-            }
-            fetch(`http://127.0.0.1:5000/api/update_asana_task`,
-                {method: "PUT", body: JSON.stringify(reqBody),
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                }
-            ).then((res)=>res.json()).then((res)=>{
-                console.log("changed")
-            })
+
         }
         else if(mode==="cubyts") {
             let index = list.findIndex(a => a._id === id)
             newList[index].status = status
-            setList(newList)
-            let reqBody = {
-                status: status,
-                id: id
-            }
-            fetch(`http://127.0.0.1:5000/api/update_cubyts_task`,
-                {
-                    method: "PUT", body: JSON.stringify(reqBody),
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                }).then((res)=>res.json()).then((res)=>{
-                console.log("changed")
-            })
         }
+        setList(newList)
 
+        fetchApi({
+            url: `http://127.0.0.1:5000/api/update-task/${mode}`,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: reqBody
+        }).then((res)=>{
+            console.log("changed")
+        }).catch(err => {
+            console.log(err);
+        });
     }
 
     const deleteTask = (id) => {
@@ -155,53 +133,41 @@ const TaskList = ({mode}) => {
         if(mode==="jira"){
             let index = list.findIndex(a=>a.id === id)
             newList.splice(index, 1)
-            setList(newList)
-            fetch(`http://127.0.0.1:5000/api/delete_jira_ticket?taskId=${id}`, {method: "DELETE"}).then((res)=>res.json()).then((res)=>{
-                console.log("deleted")
-            })
+
 
         }
         else if(mode === "asana"){
             let index = list.findIndex(a=>a.gid === id)
             newList.splice(index, 1)
-            console.log(index);
-            setList(newList)
-            fetch(`http://127.0.0.1:5000/api/delete_asana_task?gid=${id}`, {method: "DELETE"}).then((res)=>res.json()).then((res)=>{
-                console.log("deleted")
 
-            })
 
         }
         else if(mode === "cubyts"){
             let index = list.findIndex(a=>a._id === id)
             newList.splice(index, 1)
-            setList(newList)
-            fetch(`http://127.0.0.1:5000/api/delete_cubyts_task?id=${id}`, {method: "DELETE"}).then((res)=>res.json()).then((res)=>{
-                console.log("deleted")
-            })
-
         }
+        setList(newList)
+        fetchApi({
+            url: `http://127.0.0.1:5000/api/delete-task/${mode}?id=${id}`,
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then((res)=>{
+            console.log("changed")
+        })
     }
 
     useEffect(()=> {
-        if(mode==="jira"){
-            fetch("http://127.0.0.1:5000/api/get_all_jira_ticket").then((res)=>res.json()).then((res)=>{
-                setList(res.data)
-            })
-
-        }
-        else if(mode === "asana"){
-            fetch("http://127.0.0.1:5000/api/get_all_asana_task").then((res)=>res.json()).then((res)=>{
-                setList(res.data)
-            })
-
-        }
-        else if(mode === "cubyts"){
-            fetch("http://127.0.0.1:5000/api/get_all_cubyts_task").then((res)=>res.json()).then((res)=>{
-                setList(res.data)
-            })
-
-        }
+        fetchApi({
+            url: `http://127.0.0.1:5000/api/task/${mode}`,
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then((res)=>{
+            setList(res.data)
+        })
 
     }, [])
 
